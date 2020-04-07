@@ -21,8 +21,8 @@ def run_experiment(parser, use_gpu):
     process_raw_data(use_gpu, force_pre_processing_overwrite=False)
 
     # run experiment
-    training_file = "data/preprocessed/sample.txt.hdf5"
-    validation_file = "data/preprocessed/sample.txt.hdf5"
+    training_file = "data/preprocessed/train_sample.txt.hdf5"
+    validation_file = "data/preprocessed/test_sample.txt.hdf5"
 
     model = ExampleModel(21, args.minibatch_size, use_gpu=use_gpu)  # embed size = 21
 
