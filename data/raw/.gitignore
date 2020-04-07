@@ -1,4 +1,4 @@
 *
 !.gitignore
-!sample.txt
-!test_example.txt
+!train_sample.txt
+!test_sample.txt
