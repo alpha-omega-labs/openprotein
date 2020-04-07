@@ -54,7 +54,10 @@ class ExampleModel(openprotein.BaseModel):
     def _get_network_emissions(self, original_aa_string):
         packed_input_sequences = self.embed(original_aa_string)
         minibatch_size = int(packed_input_sequences[1][0])
+
+        # why init in every fwd pass?
         self.init_hidden(minibatch_size)
+
         (data, bi_lstm_batches, _, _), self.hidden_layer = self.bi_lstm(
             packed_input_sequences, self.hidden_layer)
         emissions_padded, batch_sizes = torch.nn.utils.rnn.pad_packed_sequence(
