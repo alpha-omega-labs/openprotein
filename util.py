@@ -139,9 +139,13 @@ def calculate_dihedral_angles_over_minibatch(atomic_coords_padded, batch_sizes, 
     atomic_coords = atomic_coords_padded.transpose(0, 1)
     for idx, _ in enumerate(batch_sizes):
         angles.append(calculate_dihedral_angles(atomic_coords[idx][:batch_sizes[idx]], use_gpu))
-    return torch.nn.utils.rnn.pad_packed_sequence(
-        torch.nn.utils.rnn.pack_sequence(angles))
+    # this was problematic:
+    packed_angles = torch.nn.utils.rnn.pack_sequence(angles)
+    if use_gpu:
+        packed_angles=packed_angles.cuda()
+    angles_padded = torch.nn.utils.rnn.pad_packed_sequence(packed_angles)
 
+    return angles_padded
 
 def protein_id_to_str(protein_id_list):
     _aa_dict_inverse = {v: k for k, v in AA_ID_DICT.items()}
