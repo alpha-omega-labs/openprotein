@@ -11,8 +11,8 @@ import torch.nn as nn
 from util import calculate_dihedral_angles_over_minibatch, calc_angular_difference, \
     write_out, calc_rmsd, calc_drmsd, calculate_dihedral_angles, \
     get_structure_from_angles, write_to_pdb
-
-
+import sys
+import numpy as np
 
 class BaseModel(nn.Module):
     def __init__(self, use_gpu, embedding_size):
@@ -30,7 +30,7 @@ class BaseModel(nn.Module):
     def embed(self, original_aa_string):
         data, batch_sizes = torch.nn.utils.rnn.pad_packed_sequence(
             torch.nn.utils.rnn.pack_sequence(original_aa_string))
-
+        assert not np.isnan(data.cpu().detach().numpy()).any()
         # one-hot encoding
         start_compute_embed = time.time()
         prot_aa_list = data.unsqueeze(1)
@@ -39,6 +39,7 @@ class BaseModel(nn.Module):
             prot_aa_list = prot_aa_list.cuda()
             embed_tensor = embed_tensor.cuda()
         input_sequences = embed_tensor.scatter_(1, prot_aa_list.data, 1).transpose(1, 2)
+        assert not np.isnan(input_sequences.cpu().detach().numpy()).any()
         end = time.time()
         write_out("Embed time:", end - start_compute_embed)
         packed_input_sequences = rnn_utils.pack_padded_sequence(input_sequences, batch_sizes)
@@ -47,13 +48,20 @@ class BaseModel(nn.Module):
     def compute_loss(self, minibatch):
         (original_aa_string, actual_coords_list, _) = minibatch
 
+        if any(np.isnan(x.cpu().detach().numpy()).any() for x in original_aa_string) or \
+        any(np.isnan(x.cpu().detach().numpy()).any() for x in actual_coords_list):
+            return None
+
         emissions, _backbone_atoms_padded, _batch_sizes = \
             self._get_network_emissions(original_aa_string)
+        assert not np.isnan(emissions.cpu().detach().numpy()).any()
         actual_coords_list_padded, batch_sizes_coords = torch.nn.utils.rnn\
             .pad_packed_sequence(
                 torch.nn.utils.rnn.pack_sequence(actual_coords_list))
+        assert not np.isnan(actual_coords_list_padded.cpu().detach().numpy()).any()
         if self.use_gpu:
             actual_coords_list_padded = actual_coords_list_padded.cuda()
+
         start = time.time()
         emissions_actual, _ = \
             calculate_dihedral_angles_over_minibatch(actual_coords_list_padded,
@@ -96,10 +104,14 @@ class BaseModel(nn.Module):
                 actual_coords = tertiary_positions.transpose(0, 1).contiguous().view(-1, 3)
                 predicted_coords = predicted_backbone_atoms[:len(primary_sequence)]\
                     .transpose(0, 1).contiguous().view(-1, 3).detach()
-                rmsd = calc_rmsd(predicted_coords, actual_coords)
-                drmsd = calc_drmsd(predicted_coords, actual_coords)
-                RMSD_list.append(rmsd)
-                dRMSD_list.append(drmsd)
+                try:
+                    rmsd = calc_rmsd(predicted_coords, actual_coords)
+                    drmsd = calc_drmsd(predicted_coords, actual_coords)
+                    RMSD_list.append(rmsd)
+                    dRMSD_list.append(drmsd)
+                except Exception as e:
+                    print(e)
+                    rmsd=0
                 error = rmsd
                 loss += error
                 end = time.time()

@@ -18,7 +18,7 @@ def run_experiment(parser, use_gpu):
     args, _unknown = parser.parse_known_args()
 
     # pre-process data
-    process_raw_data(use_gpu, force_pre_processing_overwrite=False)
+    process_raw_data(use_gpu, raw_data_root="data/raw/*", force_pre_processing_overwrite=False)
 
     # run experiment
     training_file = "data/preprocessed/train_sample.txt.hdf5"

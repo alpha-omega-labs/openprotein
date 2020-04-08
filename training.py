@@ -37,21 +37,31 @@ def train_model(data_set_identifier, model, train_loader, validation_loader,
     minibatches_proccesed = 0
 
     while not stopping_condition_met:
+        # isn't this a duplicate?
         optimizer.zero_grad()
         model.zero_grad()
         loss_tracker = np.zeros(0)
         for _minibatch_id, training_minibatch in enumerate(train_loader, 0):
             minibatches_proccesed += 1
             start_compute_loss = time.time()
+
+            # forward pass
             loss = model.compute_loss(training_minibatch)
-            write_out("Train loss:", float(loss))
+            if loss==None:
+                continue
+            write_out("Train loss:", float(loss.detach()))
             start_compute_grad = time.time()
-            loss.backward()
-            loss_tracker = np.append(loss_tracker, float(loss))
+
+            loss_tracker = np.append(loss_tracker, float(loss.detach()))
             end = time.time()
             write_out("Loss time:", start_compute_grad - start_compute_loss, "Grad time:",
                       end - start_compute_grad)
+
+            # backward pass
+            loss.backward()
             optimizer.step()
+
+            # isn't this a duplicate?
             optimizer.zero_grad()
             model.zero_grad()
 

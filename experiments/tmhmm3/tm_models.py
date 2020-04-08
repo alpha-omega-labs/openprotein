@@ -18,7 +18,7 @@ from experiments.tmhmm3.tm_util import get_predicted_type_from_labels
 from experiments.tmhmm3.tm_util import remapped_labels_hmm_to_orginal_labels
 from experiments.tmhmm3.tm_util import is_topologies_equal
 from experiments.tmhmm3.tm_util import original_labels_to_fasta
-from pytorchcrf.torchcrf import CRF
+from torchcrf import CRF
 from util import write_out, get_experiment_id
 
 # seed random generator for reproducibility

@@ -51,6 +51,7 @@ def main():
         start_dashboard_server()
 
     experiment = importlib.import_module("experiments." + args.experiment_id)
+
     experiment.run_experiment(parser, use_gpu)
 
 main()

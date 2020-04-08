@@ -18,9 +18,9 @@ from util import calculate_dihedral_angles_over_minibatch, \
 MAX_SEQUENCE_LENGTH = 2000
 
 
-def process_raw_data(use_gpu, force_pre_processing_overwrite=True):
+def process_raw_data(use_gpu, raw_data_root="data/raw/*", force_pre_processing_overwrite=True):
     print("Starting pre-processing of raw data...")
-    input_files = glob.glob("data/raw/*")
+    input_files = glob.glob(raw_data_root)
     print(input_files)
     input_files_filtered = filter_input_files(input_files)
     for file_path in input_files_filtered:
@@ -42,6 +42,33 @@ def process_raw_data(use_gpu, force_pre_processing_overwrite=True):
         if not os.path.isfile(preprocessed_file_name):
             process_file(filename, preprocessed_file_name, use_gpu)
     print("Completed pre-processing.")
+
+def process_single_raw_data(unfiltered_file_path,use_gpu, force_pre_processing_overwrite=True):
+    print("Starting pre-processing of raw data...")
+    print(unfiltered_file_path)
+    root_dir = os.path.dirname(unfiltered_file_path)
+    file_path = filter_input_files([unfiltered_file_path])
+    file_path = file_path[0]
+    if platform.system() == 'Windows':
+        filename = file_path.split('\\')[-1]
+    else:
+        filename = file_path.split('/')[-1]
+    preprocessed_file_name = os.path.join(root_dir ,filename + ".hdf5")
+    raw_file_name = os.path.join(root_dir, filename)
+
+    # check if we should remove the any previously processed files
+    if os.path.isfile(preprocessed_file_name):
+        print("Preprocessed file for " + filename + " already exists.")
+        if force_pre_processing_overwrite:
+            print("force_pre_processing_overwrite flag set to True, overwriting old file...")
+            os.remove(preprocessed_file_name)
+        else:
+            print("Skipping pre-processing for this file...")
+
+    if not os.path.isfile(preprocessed_file_name):
+        process_file(raw_file_name, preprocessed_file_name, use_gpu, root_dir)
+    print("Completed pre-processing.")
+    return preprocessed_file_name
 
 
 def read_protein_from_file(file_pointer):
@@ -84,7 +111,7 @@ def read_protein_from_file(file_pointer):
             return None
 
 
-def process_file(input_file, output_file, use_gpu):
+def process_file(input_file, output_file, use_gpu, data_root="data/raw/"):
     print("Processing raw data file", input_file)
 
     # create output file
@@ -99,7 +126,7 @@ def process_file(input_file, output_file, use_gpu):
                                 maxshape=(None, MAX_SEQUENCE_LENGTH),
                                 dtype='uint8')
 
-    input_file_pointer = open("data/raw/" + input_file, "r")
+    input_file_pointer = open(os.path.join(data_root ,input_file), "r")
 
     while True:
         # while there's more proteins to process
@@ -172,3 +199,4 @@ def process_file(input_file, output_file, use_gpu):
 def filter_input_files(input_files):
     disallowed_file_endings = (".gitignore", ".DS_Store")
     return list(filter(lambda x: not x.endswith(disallowed_file_endings), input_files))
+

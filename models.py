@@ -29,6 +29,7 @@ class ExampleModel(openprotein.BaseModel):
         self.hidden_size = 25
         self.num_lstm_layers = 2
         self.mixture_size = 500
+        self.minibatch_size = minibatch_size
         self.bi_lstm = nn.LSTM(self.get_embedding_size(), self.hidden_size,
                                num_layers=self.num_lstm_layers,
                                bidirectional=True, bias=True)
@@ -39,6 +40,8 @@ class ExampleModel(openprotein.BaseModel):
         self.soft = nn.LogSoftmax(2)
         self.batch_norm = nn.BatchNorm1d(self.mixture_size)
 
+        # self.init_hidden(minibatch_size)
+
     def init_hidden(self, minibatch_size):
         # number of layers (* 2 since bidirectional), minibatch_size, hidden size
         initial_hidden_state = torch.zeros(self.num_lstm_layers * 2,
@@ -48,20 +51,50 @@ class ExampleModel(openprotein.BaseModel):
         if self.use_gpu:
             initial_hidden_state = initial_hidden_state.cuda()
             initial_cell_state = initial_cell_state.cuda()
+
+
+        self.hidden_layer = (autograd.Variable(initial_hidden_state),
+                             autograd.Variable(initial_cell_state))
+
+
+    def retain_hidden(self):
+        # number of layers (* 2 since bidirectional), minibatch_size, hidden size
+        initial_hidden_state, initial_cell_state = self.hidden_layer[0].detach(),self.hidden_layer[1].detach()
+        if self.use_gpu:
+            initial_hidden_state = initial_hidden_state.cuda()
+            initial_cell_state = initial_cell_state.cuda()
+
+
         self.hidden_layer = (autograd.Variable(initial_hidden_state),
                              autograd.Variable(initial_cell_state))
 
     def _get_network_emissions(self, original_aa_string):
         packed_input_sequences = self.embed(original_aa_string)
+
         minibatch_size = int(packed_input_sequences[1][0])
 
-        # why init in every fwd pass?
+
+        # why init in every fwd pass? Is it stateless?
+        # if self.minibatch_size != minibatch_size:
+        #     self.minibatch_size = minibatch_size
+        #     self.init_hidden(self.minibatch_size)
+        # else:
+        #     self.retain_hidden()
+
+        # stateless
         self.init_hidden(minibatch_size)
 
+
+        # performing the fwd pass
         (data, bi_lstm_batches, _, _), self.hidden_layer = self.bi_lstm(
             packed_input_sequences, self.hidden_layer)
+
+        assert not np.isnan(data.cpu().detach().numpy()).any()
+
         emissions_padded, batch_sizes = torch.nn.utils.rnn.pad_packed_sequence(
             torch.nn.utils.rnn.PackedSequence(self.hidden_to_labels(data), bi_lstm_batches))
+
+        assert not np.isnan(emissions_padded.cpu().detach().numpy()).any()
         emissions = emissions_padded.transpose(0, 1)\
             .transpose(1, 2)  # minibatch_size, self.mixture_size, -1
         emissions = self.batch_norm(emissions)
@@ -69,10 +102,15 @@ class ExampleModel(openprotein.BaseModel):
         probabilities = torch.exp(self.soft(emissions))
         output_angles = self.softmax_to_angle(probabilities)\
             .transpose(0, 1)  # max size, minibatch size, 3 (angles)
+
+        assert not np.isnan(output_angles.cpu().detach().numpy()).any()
+
         backbone_atoms_padded, _ = \
             get_backbone_positions_from_angular_prediction(output_angles,
                                                            batch_sizes,
                                                            self.use_gpu)
+        assert not np.isnan(backbone_atoms_padded.cpu().detach().numpy()).any()
+
         return output_angles, backbone_atoms_padded, batch_sizes
 
 

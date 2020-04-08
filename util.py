@@ -138,7 +138,9 @@ def calculate_dihedral_angles_over_minibatch(atomic_coords_padded, batch_sizes, 
     angles = []
     atomic_coords = atomic_coords_padded.transpose(0, 1)
     for idx, _ in enumerate(batch_sizes):
-        angles.append(calculate_dihedral_angles(atomic_coords[idx][:batch_sizes[idx]], use_gpu))
+        angle = calculate_dihedral_angles(atomic_coords[idx][:batch_sizes[idx]], use_gpu)
+        assert not np.isnan(angle.cpu().detach().numpy()).any()
+        angles.append(angle )
     # this was problematic:
     packed_angles = torch.nn.utils.rnn.pack_sequence(angles)
     if use_gpu:
@@ -269,10 +271,16 @@ def calc_angular_difference(values_1, values_2):
         assert values_2[idx].shape[1] == 3
         a1_element = values_1[idx].view(-1, 1)
         a2_element = values_2[idx].view(-1, 1)
-        acc += torch.sqrt(torch.mean(
-            torch.min(torch.abs(a2_element - a1_element),
-                      2 * math.pi - torch.abs(a2_element - a1_element)
-                      ) ** 2))
+        assert not any(math.isnan(x) for x in a1_element.cpu().detach().numpy())
+        assert not any(math.isnan(x) for x in a1_element.cpu().detach().numpy())
+        acc_ = torch.sqrt(torch.mean(
+            torch.min(
+                torch.abs(a2_element - a1_element),
+                2 * math.pi - torch.abs(a2_element - a1_element)
+                      )
+            ** 2))
+        assert not math.isnan(acc_.cpu().detach().numpy())
+        acc += acc_
     return acc / values_1.shape[0]
 
 
