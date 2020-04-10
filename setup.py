@@ -7,4 +7,6 @@
 #  cd pytorch-crf/
 # pip install -r requirements.txt
 # pip install -e .
+conda env create - -file = environment.yaml
+
 
