@@ -372,5 +372,5 @@ def load_model_from_disk(path, force_cpu=True):
     else:
         # load model using default map_location
         model = torch.load(path)
-        model.flatten_parameters()
+        # model.flatten_parameters()
     return model

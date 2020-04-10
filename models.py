@@ -215,6 +215,7 @@ class SimpleRCNN(openprotein.BaseModel):
 
         return output_angles, backbone_atoms_padded, batch_sizes
 
+from experiments.deepprotein.dp_utils import post_process_prediction_data as postproc_preds, is_topologies_equal
 # https://github.com/eghbalz/Master/blob/master/Models%20and%20processed%20data/ProteinNet_ConvLSTM_100_global.py
 class DeepResRCNN_100(openprotein.BaseModel):
     def __init__(self, embedding_size, minibatch_size, use_gpu,kernel=5,stride=1,input_dim=1):
@@ -282,7 +283,6 @@ class DeepResRCNN_100(openprotein.BaseModel):
         self.conv_bn20 = nn.BatchNorm1d(600)
         self.conv_bn22 = nn.BatchNorm1d(600)
         self.conv_bn23 = nn.BatchNorm1d(600)
-
 
     def init_hidden(self, minibatch_size):
         # number of layers (* 2 since bidirectional), minibatch_size, hidden size

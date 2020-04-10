@@ -15,7 +15,7 @@ from experiments.deepprotein.config import *
 def run_experiment(parser, use_gpu):
     # parse experiment specific command line arguments
     parser.add_argument('--learning-rate', dest='learning_rate', type=float,
-                        default=0.01, help='Learning rate to use during training.')
+                        default=0.001, help='Learning rate to use during training.')
     parser.add_argument('--embed-size', dest='embed_size', type=int,
                         default=21, help='Embedding size.')
     args, _unknown = parser.parse_known_args()
@@ -57,10 +57,10 @@ def run_experiment(parser, use_gpu):
     test_loader = contruct_dataloader_from_disk(preprocessed_test_file, args.minibatch_size)
     write_out("Testing model...")
     model = load_model_from_disk(train_model_path, force_cpu=False)
-    _loss, json_data, prediction_data = model.evaluate_model(test_loader)
+    _loss, json_data, _ = model.evaluate_model(test_loader)
 
-    all_prediction_data.append(prediction_data)
-    all_prediction_data.append(model.post_process_prediction_data(prediction_data))
+    all_prediction_data.append(json_data)
+    # all_prediction_data.append(model.post_process_prediction_data(prediction_data))
     result_matrix = np.array(json_data['confusion_matrix'])
     result_matrices += result_matrix
     write_out(result_matrix)
