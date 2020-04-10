@@ -34,7 +34,7 @@ class BaseModel(nn.Module):
         # one-hot encoding
         start_compute_embed = time.time()
         prot_aa_list = data.unsqueeze(1)
-        embed_tensor = torch.zeros(prot_aa_list.size(0), 21, prot_aa_list.size(2))  # 21 classes
+        embed_tensor = torch.zeros(prot_aa_list.size(0), self.embedding_size, prot_aa_list.size(2))  # 21 classes
         if self.use_gpu:
             prot_aa_list = prot_aa_list.cuda()
             embed_tensor = embed_tensor.cuda()
@@ -43,7 +43,7 @@ class BaseModel(nn.Module):
         end = time.time()
         write_out("Embed time:", end - start_compute_embed)
         packed_input_sequences = rnn_utils.pack_padded_sequence(input_sequences, batch_sizes)
-        return packed_input_sequences
+        return packed_input_sequences, input_sequences, batch_sizes
 
     def compute_loss(self, minibatch):
         (original_aa_string, actual_coords_list, _) = minibatch

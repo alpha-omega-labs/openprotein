@@ -31,7 +31,10 @@ def run_experiment(parser, use_gpu):
 
     # run experiment
 
-    model = ExampleModel(args.embed_size, args.minibatch_size, use_gpu=use_gpu)  # embed size = 21
+    # model = ExampleModel(args.embed_size, args.minibatch_size, use_gpu=use_gpu)  # embed size = 21
+    # model = SimpleRCNN(args.embed_size, args.minibatch_size, use_gpu=use_gpu)  # embed size = 21
+    model = DeepResRCNN_100(args.embed_size, args.minibatch_size, use_gpu=use_gpu)  # embed size = 21
+
 
     train_loader = contruct_dataloader_from_disk(preprocessed_training_file, args.minibatch_size)
     validation_loader = contruct_dataloader_from_disk(preprocessed_validation_file, args.minibatch_size)
