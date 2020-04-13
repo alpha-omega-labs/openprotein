@@ -7,6 +7,11 @@ This is a fork from openprotein, A PyTorch framework for tertiary protein struct
 - CASP7 dataset from [ProteinNet](https://github.com/aqlaboratory/proteinnet) is added.
 - A deep residual CNN architecture is added
 
+# Run:
+you can use the following commands:
+`__main__.py --use-gpu --evaluate-on-test --experiment-id deepprotein --minibatch-size 6 --learning-rate 0.001 --min-updates 14000`
+
+##
 
 ![Alt text](examplemodelrun.png?raw=true "OpenProtein")
 
