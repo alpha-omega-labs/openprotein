@@ -1,3 +1,3 @@
-training_file = "/media/sharpie/1TBlade/data/casp/casp7/training_30"
-validation_file = "/media/sharpie/1TBlade/data/casp/casp7/validation"
-test_file = "/media/sharpie/1TBlade/data/casp/casp7/testing"
+training_file = "casp7/training_30"
+validation_file = "casp7/validation"
+test_file = "casp7/testing"
