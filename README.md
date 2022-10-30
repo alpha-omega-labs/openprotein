@@ -15,7 +15,7 @@ sudo apt-get update && sudo apt-get install -y lambda-stack-cuda
 
 ## OpenProtein installation
 
-- 1. <code>https://github.com/alpha-omega-labs/openprotein.git</code>
+- 1. <code> git clone https://github.com/alpha-omega-labs/openprotein.git</code>
 - 2. 
 <pre>
 cd openprotein
