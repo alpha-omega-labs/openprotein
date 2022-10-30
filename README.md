@@ -1,3 +1,37 @@
+# Installation of OpenProtein from scratch for 3070, 3080, 3090 GPU
+
+## Lambda AI stack install
+https://lambdalabs.com/blog/install-tensorflow-and-pytorch-on-rtx-30-series
+
+- 1. Install clean Ubuntu 20.04 LTS (Focal Fossa)
+- 2. Install Lambda (~4GB to download, ~13GB installed)
+<pre>
+LAMBDA_REPO=$(mktemp) && \
+wget -O${LAMBDA_REPO} https://lambdalabs.com/static/misc/lambda-stack-repo.deb && \
+sudo dpkg -i ${LAMBDA_REPO} && rm -f ${LAMBDA_REPO} && \
+sudo apt-get update && sudo apt-get install -y lambda-stack-cuda
+</pre>
+- 3. reboot
+
+## OpenProtein installation
+
+- 1. <code>https://github.com/alpha-omega-labs/openprotein.git</code>
+- 2. 
+<pre>
+cd openprotein
+git clone https://github.com/JeppeHallgren/pytorch-crf.git
+cd pytorch-crf
+pip install -U Flask
+pip install -U flask-cors
+pip install PeptideBuilder
+pip install requests
+pip install -r requirements.txt
+pip install -e .
+cd ..
+sudo apt-get install npm
+python3 __main__.py --use-gpu --experiment-id deepprotein --minibatch-size 32 --learning-rate 0.001 --min-updates 16000
+</pre>
+
 # OpenProtein
 
 This is a fork from openprotein, A PyTorch framework for tertiary protein structure prediction.
